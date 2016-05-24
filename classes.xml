@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<classes>
+  <class id="36.7" color="000000" flag="4.png">
+    <boat id="USA52293" name="Sorcerer"/>
+	<boat id="USA235" name="Tequila Mockinbird"/>
+  </class>
+</classes>

@@ -106,6 +106,7 @@ var _margin = {
         },
         width = 600 - _margin.left - _margin.right,
         height = 600 - _margin.top - _margin.bottom;
+var _currMaxTime = 0;
 
 function draw() {
 
@@ -128,6 +129,8 @@ function draw() {
         })
       })
     })
+
+    _currMaxTime = maxTime;
 
     _x = d3.scale.linear()
         .domain([-87.58117, -87.53250])
@@ -183,7 +186,7 @@ function draw() {
 	.value(maxTime)
 
     d3.select("#slider")
-        .style("width", width + 'px')
+        .style("width",600 + 'px')
         .call(slider);
 
     _objects = _svg.append("svg")
@@ -199,38 +202,58 @@ function draw() {
         .attr("r", 6)
         .attr("fill", "red");
 
-     _rdata.forEach(function(race){
-         race.boats.forEach(function(boat){
-             var trace = _objects.selectAll(".pos[boat="+boat.id+"]")
-                 .data(boat.positions)
-                 .enter().append("circle")
-                 .classed("pos", true)
-                 .attr("transform", transform)
-                 .attr("r", 4)
-                 .attr("boat", boat.id)
-                 .attr("fill", "green");
-         })
-     })
+     d3.select("#sections").selectAll("input")
+        .data(d3.set(_cdata.map(function(d){return d.section;})).values())
+        .enter()
+        .append("label")
+            .text(function(d){return d;})
+        .append("input")
+            .attr("checked", true)
+            .attr("type", "checkbox")
+            .attr("value", function(d){return d;})
+            .on("change", inputClick)
 
+    updatePos();
+
+}
+
+function inputClick()
+{
+    updatePos();
 }
 
 function slide(evt, posixTime)
 {
-    updatePos(posixTime);
+    _currMaxTime = posixTime
+    updatePos();
 }
 
-function updatePos(posixTime)
+function updatePos()
 {
     //remove all positions
     _objects.selectAll(".pos").remove();
 
+    //find selected sections
+    var checked = d3.select("#sections")
+        .selectAll("input")[0] //0 because select keeps the structure and out inputs are within labels
+        .filter(function(d){return d.checked;})
+        .map(function(d){return d.value;})
+
+    //find boats to be displayed from selected sections
+    var boatsSel = _cdata
+        .filter(function(boat){
+            return checked.some(
+                checkedVal => boat.section=== checkedVal)
+            }).map(function(boat){return boat.id})
+
     //add positions with time lower than given as parameter
     _rdata.forEach(function(race){
-        race.boats.forEach(function(boat){
+        race.boats.filter(function(boat){return boatsSel.some(boatID => boat.id === boatID)})
+            .forEach(function(boat){
             var trace = _objects.selectAll(".pos[boat="+boat.id+"]")
                 .data(boat.positions)
                 .enter().append("circle")
-                .filter(function(d) {return d.time <= posixTime})
+                .filter(function(d) {return d.time <= _currMaxTime})
                 .classed("pos", true)
                 .attr("transform", transform)
                 .attr("r", 4)

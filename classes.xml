@@ -2,5 +2,6 @@
 <boats>
   <boat id="USA52293" name="Sorcerer" color="#FFFF00" section="36.7" flag="4.png"/>
   <boat id="USA235" name="Tequila Mockinbird" color="#00FFFF" section="36.7" flag="4.png"/>
+  <boat id="USA1" name="Fake Boat" color="#00FF00" section="1" flag="1.png"/>
+  <boat id="USA2" name="Fake Boat2" color="#0AFF0A" section="2" flag="2.png"/>
 </boats>
-

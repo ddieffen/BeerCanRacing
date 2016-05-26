@@ -1,10 +1,32 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <script src="https://d3js.org/d3.v3.min.js"></script>
-</head>
-<meta charset="utf-8">
-<body>
-<script type="text/javascript" src="..\js\chart.js"></script>
-</body>
+   <head>
+      <script src="https://d3js.org/d3.v3.min.js"></script>	
+      <link rel="stylesheet" href="..\css\d3.slider.css" /> 
+   </head>
+   <meta charset="utf-8">
+   <style>
+      body {
+      position: relative;
+      width: 960px;
+      }
+      svg {
+      font: 10px sans-serif;
+      shape-rendering: crispEdges;
+      }
+      rect {
+      fill: #ddd;
+      }
+      .axis path,
+      .axis line {
+      fill: none;
+      stroke: #fff;
+      }
+   </style>
+   <body>
+      <script type="text/javascript" src="..\js\d3.slider.js"></script>
+      <script type="text/javascript" src="..\js\chart.js"></script>
+      <div id="chart"></div>
+      <div id="slider"></div>
+   </body>
 </html>

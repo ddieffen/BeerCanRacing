@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<race date="2016-05-25" course="1">
+<race date="2016-05-25" course="5" rclat="41.85283" rclon="-87.55695">
   <section id="2" start="19:00">
 	<boat id="USA1">
 		<p t="1464202800" l="41.85284" o="-87.55683"/>

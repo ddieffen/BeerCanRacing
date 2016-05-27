@@ -152,7 +152,7 @@ function draw() {
         .range([0, width]);
 
     _y = d3.scale.linear()
-        .domain([41.87100, 41.83467])
+        .domain([41.83, 41.87])
         .range([height, 0]);
 
     _xAxis = d3.svg.axis()
@@ -238,6 +238,10 @@ function draw() {
         .attr("transform", transform)
         .attr("r", 6)
         .attr("fill", "red");
+
+
+    var rc = _objects.selectAll(".dot[rc]")
+
 
     d3.select("#sections").selectAll("input")
         .data(d3.set(_cdata.map(function(d) {

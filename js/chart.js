@@ -5,20 +5,20 @@ function asyncCounter(numCalls, callback) {
     this.callback = callback;
     this.numCalls = numCalls;
     this.calls = 0;
-};
+}
 
 asyncCounter.prototype.increment = function() {
-    this.calls++
-        if (this.calls >= this.numCalls) {
-            this.callback();
-        }
-};
+    this.calls++;
+    if (this.calls >= this.numCalls) {
+        this.callback();
+    }
+}
 
 var myAsyncCounter = new asyncCounter(3, draw);
 
 var _wpdata;
 var _codata;
-d3.xml("..\\waypoints.xml", function(error, data) {
+d3.xml("../waypoints.xml", function(error, data) {
     if (error) throw error;
     // Convert the XML document to an array of objects.
     // Note that querySelectorAll returns a NodeList, not a proper Array,
@@ -47,20 +47,22 @@ d3.xml("..\\waypoints.xml", function(error, data) {
 
 
 var _cdata;
-d3.xml("..\\classes.xml", function(error, data) {
+d3.xml("../classes.xml", function(error, data) {
     if (error) throw error;
     // Convert the XML document to an array of objects.
     // Note that querySelectorAll returns a NodeList, not a proper Array,
     // so we must use map.call to invoke array methods.
     _cdata = [].map.call(data.querySelectorAll("boat"), function(boat) {
-                return {
-                    id: boat.getAttribute("id"),
-                    name: boat.getAttribute("name"),
-                    color: boat.getAttribute("color"),
-                    section: boat.getAttribute("section"),
-                    flag: boat.getAttribute("flag")
-                }
-            });
+        return {
+            id: boat.getAttribute("id"),
+            name: boat.getAttribute("name"),
+            color: boat.getAttribute("color"),
+            section: boat.getAttribute("section"),
+            clas: boat.getAttribute("class"),
+            rating: boat.getAttribute("rating"),
+            flag: boat.getAttribute("flag")
+        }
+    });
     myAsyncCounter.increment();
 })
 
@@ -99,14 +101,27 @@ var _y;
 var _svg;
 var _objects;
 var _margin = {
-            top: 20,
-            right: 20,
-            bottom: 30,
-            left: 40
-        },
-        width = 600 - _margin.left - _margin.right,
-        height = 600 - _margin.top - _margin.bottom;
+        top: 20,
+        right: 20,
+        bottom: 30,
+        left: 40
+    },
+    width = 600 - _margin.left - _margin.right,
+    height = 600 - _margin.top - _margin.bottom;
 var _currMaxTime = 0;
+
+
+var markerData = [
+    {x:0, y:0},
+    {x:0, y:4},
+    {x:9, y:2}
+]
+
+var markLine = d3.svg.line()
+    .x(function(d){return d.x;})
+    .y(function(d){return d.y;})
+    .interpolate("cardinal-closed");
+
 
 function draw() {
 
@@ -117,17 +132,17 @@ function draw() {
     var minLon = Infinity;
     var maxLon = -Infinity;
 
-    _rdata.forEach(function(race){
-      race.boats.forEach(function(boat){
-        boat.positions.forEach(function(position){
-            minTime = Math.min(minTime, position.time)
-            maxTime = Math.max(maxTime, position.time)
-            minLat = Math.min(minLat, position.lat)
-            maxLat = Math.max(maxLat, position.lat)
-            minLon = Math.min(minLon, position.lon)
-            maxLon = Math.max(maxLon, position.lon)
+    _rdata.forEach(function(race) {
+        race.boats.forEach(function(boat) {
+            boat.positions.forEach(function(position) {
+                minTime = Math.min(minTime, position.time)
+                maxTime = Math.max(maxTime, position.time)
+                minLat = Math.min(minLat, position.lat)
+                maxLat = Math.max(maxLat, position.lat)
+                minLon = Math.min(minLon, position.lon)
+                maxLon = Math.max(maxLon, position.lon)
+            })
         })
-      })
     })
 
     _currMaxTime = maxTime;
@@ -164,6 +179,28 @@ function draw() {
         .attr("transform", "translate(" + _margin.left + "," + _margin.top + ")")
         .call(zoom);
 
+    var defs = _svg.append("defs")
+    d3.set(
+        _cdata.map(function(d) {
+            return d.color;})
+        ).values().forEach(function(color)
+        {
+            defs.append("marker")
+            .attr("id", "boat"+color.replace("#",""))
+            .attr("markerWidth", 10)
+            .attr("markerHeight", 10)
+            .attr("refX",0)
+            .attr("refY",2)
+            .attr("orient","auto")
+            .attr("markerUnits","strokeWidth")
+            .append("path")
+            .data([markerData])
+            .attr("d", function(d) {return markLine(d) + "Z";})
+            .attr("fill", color)
+            .attr("stroke", color)
+            .attr("strokeWidth", 2)
+        })
+
     _svg.append("rect")
         .attr("width", width)
         .attr("height", height);
@@ -183,10 +220,10 @@ function draw() {
         .max(maxTime)
         .step(1)
         .on("slide", slide)
-	.value(maxTime)
+        .value(maxTime)
 
     d3.select("#slider")
-        .style("width",600 + 'px')
+        .style("width", 600 + 'px')
         .call(slider);
 
     _objects = _svg.append("svg")
@@ -196,73 +233,166 @@ function draw() {
 
     var marks = _objects.selectAll(".dot")
         .data(_wpdata)
-      .enter().append("circle")
+        .enter().append("circle")
         .classed("dot", true)
         .attr("transform", transform)
         .attr("r", 6)
         .attr("fill", "red");
 
-     d3.select("#sections").selectAll("input")
-        .data(d3.set(_cdata.map(function(d){return d.section;})).values())
+    d3.select("#sections").selectAll("input")
+        .data(d3.set(_cdata.map(function(d) {
+            return d.section;
+        })).values())
         .enter()
         .append("label")
-            .text(function(d){return d;})
+        .text(function(d) {
+            return d;
+        })
         .append("input")
-            .attr("checked", true)
-            .attr("type", "checkbox")
-            .attr("value", function(d){return d;})
-            .on("change", inputClick)
+        .attr("checked", true)
+        .attr("type", "checkbox")
+        .attr("value", function(d) {
+            return d;
+        })
+        .on("change", inputClick)
 
+    updateBoats();
     updatePos();
 
 }
 
-function inputClick()
-{
+function inputClick() {
+    updateBoats();
     updatePos();
 }
 
-function slide(evt, posixTime)
-{
+function slide(evt, posixTime) {
     _currMaxTime = posixTime
     updatePos();
 }
 
-function updatePos()
-{
-    //remove all positions
-    _objects.selectAll(".pos").remove();
-
+function updateBoats() {
     //find selected sections
     var checked = d3.select("#sections")
         .selectAll("input")[0] //0 because select keeps the structure and out inputs are within labels
-        .filter(function(d){return d.checked;})
-        .map(function(d){return d.value;})
+        .filter(function(d) {
+            return d.checked;
+        })
+        .map(function(d) {
+            return d.value;
+        })
 
     //find boats to be displayed from selected sections
-    var boatsSel = _cdata
-        .filter(function(boat){
-            return checked.some(
-                checkedVal => boat.section=== checkedVal)
-            }).map(function(boat){return boat.id})
+    var boats = _cdata.filter(function(boat) {
+        return checked.some(function(checkedVal) {
+            return boat.section === checkedVal;
+        })
+    });
+
+    //add selected boats and colors
+    var blist = d3.select("#boats")
+    blist.selectAll("div").remove()
+    boats.forEach(function(boat) {
+        var legend = blist.append("div")
+            .attr("class", "legend")
+        var legendSvg = legend.append("svg")
+            .attr("width", 200)
+            .attr("height", 20)
+        legendSvg.append("rect")
+            .attr("width", 20)
+            .attr("height", 20)
+            .style("fill", function(d) {
+                var boatObj = boats.filter(function(bo) {
+                    return bo.id === boat.id;
+                })
+                return boatObj[0].color;
+            })
+        legendSvg.append("text")
+            .text(boat.name)
+            .attr("x", 25)
+            .attr("y", 17)
+            .attr("font-family", "sans-serif")
+            .attr("font-size", 13 + "px")
+            .attr("fill", "#000000")
+    })
+}
+
+function updatePos() {
+    //remove all positions
+    _objects.selectAll(".pos").remove();
+    _objects.selectAll(".trace").remove();
+    //find selected sections
+    var checked = d3.select("#sections")
+        .selectAll("input")[0] //0 because select keeps the structure and out inputs are within labels
+        .filter(function(d) {
+            return d.checked;
+        })
+        .map(function(d) {
+            return d.value;
+        })
+
+    //find boats to be displayed from selected sections
+    var boats = _cdata.filter(function(boat) {
+        return checked.some(function(checkedVal) {
+            return boat.section === checkedVal;
+        })
+    });
+    var boatsSel = boats.map(function(boat) {
+        return boat.id
+    });
 
     //add positions with time lower than given as parameter
-    _rdata.forEach(function(race){
-        race.boats.filter(function(boat){return boatsSel.some(boatID => boat.id === boatID)})
-            .forEach(function(boat){
-            var trace = _objects.selectAll(".pos[boat="+boat.id+"]")
-                .data(boat.positions)
-                .enter().append("circle")
-                .filter(function(d) {return d.time <= _currMaxTime})
-                .classed("pos", true)
-                .attr("transform", transform)
-                .attr("r", 4)
-                .attr("boat", boat.id)
-                .attr("fill", "green");
-         })
-     })
-
+    _rdata.forEach(function(race) {
+        race.boats.filter(function(boat) {
+                return boatsSel.some(function(boatID) {
+                    return boat.id === boatID;
+                })
+            })
+            .forEach(function(boat) {
+                //var points = _objects.selectAll(".pos[boat=" + boat.id + "]")
+                //    .data(boat.positions.filter(function(d) {
+                //        return d.time <= _currMaxTime
+                //    }))
+                //    .enter()
+                //    .append("circle")
+                //    .classed("pos", true)
+                //    .attr("transform", transform)
+                //    .attr("r", 4)
+                //    .attr("boat", boat.id)
+                //    .attr("fill", function(d) {
+                //        var boatObj = boats.filter(function(bo) {
+                //            return bo.id === boat.id;
+                //        })
+                //        return boatObj[0].color;
+                //    });
+                var trace = _objects.selectAll(".trace[boat=" + boat.id + "]")
+                    .data([boat.positions.filter(function(d) {
+                        return d.time <= _currMaxTime
+                        })])
+                    .enter()
+                    .append("path")
+                    .classed("trace", true)
+                    .attr("d", line)
+                    .attr("fill", "none")
+                    .attr("stroke", function(d) {
+                        var boatObj = boats.filter(function(bo) {
+                            return bo.id === boat.id;
+                        })
+                        return boatObj[0].color;
+                     })
+                     .attr("stroke-width", 2)
+                     .attr("marker-end", function(d) {
+                         var boatObj = boats.filter(function(bo) {
+                             return bo.id === boat.id;
+                         })
+                         return "url(#boat"+boatObj[0].color.replace("#","")+")";})
+            })
+    })
 }
+
+var line =  d3.svg.line()
+        .x(function(d){return _x(d.lon);})
+        .y(function(d){return _y(d.lat);})
 
 //We use the same function to transform Marks and Boat positions
 function transform(d) {
@@ -273,12 +403,11 @@ function zoomed() {
     _svg.select(".x.axis").call(_xAxis);
     _svg.select(".y.axis").call(_yAxis);
 
-    _svg.selectAll(".dot")
-      .attr("transform", transform);
+    _objects.selectAll(".dot")
+        .attr("transform", transform);
 
-    _svg.selectAll(".pos")
-      .attr("transform", transform);
-
+    _objects.selectAll("path")
+            .attr("d", line);
 }
 
 function reset() {

@@ -254,14 +254,60 @@ function draw() {
         .attr("value", function(d) {
             return d;
         })
-        .on("change", inputClick)
+        .on("change", inputSectionClick)
 
+    updateClasses();
     updateBoats();
     updatePos();
 
 }
 
-function inputClick() {
+function inputSectionClick() {
+    updateClasses();
+    updateBoats();
+    updatePos();
+}
+
+function updateClasses()
+{
+    var checked = d3.select("#sections")
+        .selectAll("input")[0] //0 because select keeps the structure and out inputs are within labels
+        .filter(function(d) {
+            return d.checked;
+        })
+        .map(function(d) {
+            return d.value;
+        })
+                                           //find boats to be displayed from selected sections
+     var boats = _cdata.filter(function(boat) {
+         return checked.some(function(checkedVal) {
+             return boat.section === checkedVal;
+         })
+     });
+
+     var classes = d3.set(boats.map(function(boat) {
+             return boat.clas;}))
+         .values()
+
+     var clasList = d3.select("#classes")
+     clasList.selectAll("label").remove()
+     clasList.selectAll("input")
+     .data(classes)
+     .enter()
+     .append("label")
+     .text(function(d) {
+         return d;
+     })
+     .append("input")
+     .attr("checked", true)
+     .attr("type", "checkbox")
+     .attr("value", function(d) {
+         return d;
+     })
+     .on("change", inputClassClick)
+}
+
+function inputClassClick() {
     updateBoats();
     updatePos();
 }
@@ -273,7 +319,7 @@ function slide(evt, posixTime) {
 
 function updateBoats() {
     //find selected sections
-    var checked = d3.select("#sections")
+    var checked = d3.select("#classes")
         .selectAll("input")[0] //0 because select keeps the structure and out inputs are within labels
         .filter(function(d) {
             return d.checked;
@@ -285,7 +331,7 @@ function updateBoats() {
     //find boats to be displayed from selected sections
     var boats = _cdata.filter(function(boat) {
         return checked.some(function(checkedVal) {
-            return boat.section === checkedVal;
+            return boat.clas === checkedVal;
         })
     });
 

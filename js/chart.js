@@ -372,7 +372,7 @@ function updatePos() {
     _objects.selectAll(".pos").remove();
     _objects.selectAll(".trace").remove();
     //find selected sections
-    var checked = d3.select("#sections")
+    var checked = d3.select("#classes")
         .selectAll("input")[0] //0 because select keeps the structure and out inputs are within labels
         .filter(function(d) {
             return d.checked;
@@ -384,7 +384,7 @@ function updatePos() {
     //find boats to be displayed from selected sections
     var boats = _cdata.filter(function(boat) {
         return checked.some(function(checkedVal) {
-            return boat.section === checkedVal;
+            return boat.clas === checkedVal;
         })
     });
     var boatsSel = boats.map(function(boat) {
